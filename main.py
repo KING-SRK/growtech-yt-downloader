@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, after_this_request
 import yt_dlp
 import os
 
@@ -12,24 +12,30 @@ if not os.path.exists(DOWNLOAD_FOLDER):
 def download_mp3(url):
     ydl_opts = {
         'format': 'bestaudio/best',
-        'cookiefile': 'cookies.txt',  # তোমার দেওয়া কুকি ফাইল
-        # 'ffmpeg_location' সরিয়ে দিয়েছি কারণ Render-এ এটা অটোমেটিক থাকে
+        'cookiefile': 'cookies.txt', 
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
         'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
-        'ignoreerrors': True,
-        'no_warnings': True,
         'nocheckcertificate': True,
+        'quiet': True,
+        'no_warnings': True,
     }
+    
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        # ডেটা এক্সট্রাক্ট করা
         info = ydl.extract_info(url, download=True)
-        # ফাইলপাথ ঠিকভাবে পাওয়ার জন্য prepare_filename ব্যবহার করা হলো
+        if info is None:
+            raise Exception("Video info could not be retrieved.")
+            
+        # সঠিক ফাইল পাথ তৈরি করা
         filename = ydl.prepare_filename(info)
         base, ext = os.path.splitext(filename)
-        return base + '.mp3'
+        mp3_filename = base + '.mp3'
+        
+        return mp3_filename
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -37,13 +43,23 @@ def index():
         url = request.form['url']
         try:
             file_path = download_mp3(url)
+            
+            # ডাউনলোড শেষ হওয়ার পর ফাইল ডিলিট করার ব্যবস্থা (সার্ভার পরিষ্কার রাখতে)
+            @after_this_request
+            def remove_file(response):
+                try:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                except Exception as error:
+                    app.logger.error(f"Error removing file: {error}")
+                return response
+
             return send_file(file_path, as_attachment=True)
         except Exception as e:
-            # এরর মেসেজটা একটু পরিষ্কারভাবে দেখাবে
             return f"Error: {str(e)}"
+            
     return render_template('index.html')
 
 if __name__ == '__main__':
-    # পোর্ট এবং হোস্ট সেট করা হলো যাতে ক্লাউডে সুবিধা হয়
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
