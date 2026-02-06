@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Grow Tech MP3 Downloader</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+        padding: 50px;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        display: inline-block;
+      }
+      input {
+        width: 300px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      h1 {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Grow Tech MP3 🎶</h1>
+      <p>Enter the YouTube video URL to download MP3:</p>
+      <form method="POST">
+        <input
+          type="text"
+          name="url"
+          placeholder="https://youtube.com/..."
+          required
+        />
+        <button type="submit">Download MP3</button>
+      </form>
+    </div>
+  </body>
+</html>
