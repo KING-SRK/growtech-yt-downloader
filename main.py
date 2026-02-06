@@ -12,18 +12,24 @@ if not os.path.exists(DOWNLOAD_FOLDER):
 def download_mp3(url):
     ydl_opts = {
         'format': 'bestaudio/best',
-        'cookiefile': 'cookies.txt',
-        'ffmpeg_location': r'C:\Users\Joy & Bijoy\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin', 
+        'cookiefile': 'cookies.txt',  # তোমার দেওয়া কুকি ফাইল
+        # 'ffmpeg_location' সরিয়ে দিয়েছি কারণ Render-এ এটা অটোমেটিক থাকে
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
         'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
+        'ignoreerrors': True,
+        'no_warnings': True,
+        'nocheckcertificate': True,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
-        return ydl.prepare_filename(info).replace('.webm', '.mp3').replace('.m4a', '.mp3')
+        # ফাইলপাথ ঠিকভাবে পাওয়ার জন্য prepare_filename ব্যবহার করা হলো
+        filename = ydl.prepare_filename(info)
+        base, ext = os.path.splitext(filename)
+        return base + '.mp3'
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -33,8 +39,11 @@ def index():
             file_path = download_mp3(url)
             return send_file(file_path, as_attachment=True)
         except Exception as e:
+            # এরর মেসেজটা একটু পরিষ্কারভাবে দেখাবে
             return f"Error: {str(e)}"
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # পোর্ট এবং হোস্ট সেট করা হলো যাতে ক্লাউডে সুবিধা হয়
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
