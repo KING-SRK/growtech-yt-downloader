@@ -12,6 +12,7 @@ if not os.path.exists(DOWNLOAD_FOLDER):
 def download_mp3(url):
     ydl_opts = {
         'format': 'bestaudio/best',
+        'cookiefile': 'cookies.txt',
         'ffmpeg_location': r'C:\Users\Joy & Bijoy\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin', 
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
